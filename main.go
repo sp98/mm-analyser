@@ -46,7 +46,7 @@ func main() {
 func setup() {
 	//Get all the stocks in a 2D array with format - Instrument Name, Sybmol, Token, Exchange, Interval
 
-	intervalInt := utility.GetInterval("3m")
+	intervalInt := utility.GetInterval(interval)
 	waitFor := utility.WaitBeforeAnalysis(intervalInt)
 	if waitFor > 0 {
 		log.Printf("Wait for %.2f minutes before starting", float64(waitFor)/60)

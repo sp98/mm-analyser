@@ -10,7 +10,7 @@ import (
 
 const (
 	MarketOpenTime       = "%s 9:00:00"
-	MarketCloseTime      = "%s 16:34:00"
+	MarketCloseTime      = "%s 15:30:00"
 	MarketActualOpenTime = "%s 09:13:00 MST"
 	TstringFormat        = "2006-01-02 15:04:05"
 	LayOut               = "2006-01-02 15:04:05"
