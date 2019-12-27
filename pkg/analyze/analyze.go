@@ -60,9 +60,10 @@ func NewInsturment(name, symbol, token, exchange string, ohlc *[]OHLC) *Instrume
 }
 
 //Analyze the instrument's tick data
-func (i *Instrument) Analyze(result *Result) {
+func (i *Instrument) Analyze(result *Result, wg *sync.WaitGroup) {
+	defer wg.Done()
 	log.Printf("Analyzing the instrument - %+v ", i)
-	log.Printf("Instrument OHLC - %+v", i.OHLC)
+	//log.Printf("Instrument OHLC - %+v", i.OHLC)
 
 	i.ohlcAnalyser(result)
 

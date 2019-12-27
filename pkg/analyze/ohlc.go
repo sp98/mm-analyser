@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 )
 
@@ -122,7 +121,7 @@ func (r *Result) UpdateResult(resultType string, i *Instrument) {
 //GetOHLC fetches the OHLC data for an instruement form the TickStore Rest API
 func GetOHLC(token, interval string) (*[]OHLC, error) {
 	url := fmt.Sprintf(DailyOHCLAPI, os.Getenv("TICK_STORE_API"), token, interval)
-	resp, err := http.Get(url)
+	resp, err := getWithAuth(url, os.Getenv("API_USER_NAME"), os.Getenv("API_PASSWORD"))
 	if err != nil {
 		return nil, fmt.Errorf("error fetching ohlc. %+v", err)
 	}
