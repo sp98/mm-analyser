@@ -10,12 +10,26 @@ import (
 
 const (
 	MarketOpenTime       = "%s 9:00:00"
-	MarketCloseTime      = "%s 16:34:00"
+	MarketCloseTime      = "%s 3:30:00"
 	MarketActualOpenTime = "%s 09:13:00 MST"
 	TstringFormat        = "2006-01-02 15:04:05"
 	LayOut               = "2006-01-02 15:04:05"
 	InfluxLayout         = "2006-01-02T15:04:05Z"
 )
+
+//IsMarketOpen returns true if market is open or viceversa
+func IsMarketOpen() {
+	for {
+		t, _ := IsWithInMarketOpenTime()
+		if t {
+			log.Println(" withhin market open time.")
+			break
+		}
+		log.Println("not withhin market open time. Waiting...")
+		time.Sleep(10 * time.Second)
+	}
+
+}
 
 //WaitBeforeAnalysis returns the number of seconds we need to wait before the next analysis to start
 func WaitBeforeAnalysis(interval int) int {

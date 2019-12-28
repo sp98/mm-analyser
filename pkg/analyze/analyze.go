@@ -3,11 +3,15 @@ package analyze
 import (
 	"log"
 	"sync"
+
+	"github.com/sp98/analyzer/pkg/utility"
 )
 
 var (
 	//DailyOHCLAPI is the API url for fetching daily OHLC data for an instrument
 	DailyOHCLAPI = "%s/v1/api/ohlc/%s/%s"
+	//ResultStoreAPI is the API end point to store the OHLC analysis results.
+	ResultStoreAPI = "%s/v1/api/ohlcresult/%s"
 )
 
 //Instrument represents a partcular stock in BSE or NSE
@@ -57,6 +61,31 @@ func NewInsturment(name, symbol, token, exchange string, ohlc *[]OHLC) *Instrume
 		Exchange: exchange,
 		OHLC:     ohlc,
 	}
+}
+
+//StartAnalysis starts the analysis of the stock
+func StartAnalysis(stocks, interval string) {
+	var wg sync.WaitGroup
+	stockList := utility.GetStocks(stocks)
+	result := &Result{Mux: &sync.Mutex{}}
+
+	for _, stock := range stockList {
+		wg.Add(1)
+		ohlc, err := GetOHLC(stock[2], interval)
+		if err != nil {
+			log.Printf("error in setup for stock %q. %+v", stock[0], err)
+		}
+		insturment := NewInsturment(stock[0], stock[1], stock[2], stock[3], ohlc)
+
+		go insturment.Analyze(result, &wg)
+	}
+
+	wg.Wait() //wait for all the go routines to finish
+
+	log.Printf("Result - %+v", result)
+	StoreOHLCResult(interval, result)
+	utility.IsMarketOpen()
+
 }
 
 //Analyze the instrument's tick data
