@@ -131,6 +131,16 @@ func GetOHLC(token, interval string) (*[]OHLC, error) {
 
 }
 
+//StoreOHLCResult calls the API end point to store the OHLC analysis results
+func StoreOHLCResult(interval string, res *Result) error {
+	url := fmt.Sprintf(ResultStoreAPI, os.Getenv("RESULT_STORE_API"), interval)
+	_, err := postWithAuth(url, os.Getenv("API_USER_NAME"), os.Getenv("API_PASSWORD"), res)
+	if err != nil {
+		return fmt.Errorf("error storing ohlc analysis result. %+v", err)
+	}
+	return nil
+}
+
 //Gives the trend before the current Candlestick pattern
 func getShortTermTrend(ohlcList []OHLC) (string, int) {
 	trend := ""
