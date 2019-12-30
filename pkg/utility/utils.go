@@ -10,7 +10,7 @@ import (
 
 const (
 	MarketOpenTime       = "%s 9:00:00"
-	MarketCloseTime      = "%s 3:30:00"
+	MarketCloseTime      = "%s 15:30:00"
 	MarketActualOpenTime = "%s 09:13:00 MST"
 	TstringFormat        = "2006-01-02 15:04:05"
 	LayOut               = "2006-01-02 15:04:05"
@@ -86,9 +86,6 @@ func GetDate() string {
 //GetInterval returns interval in integer
 func GetInterval(i string) int {
 	switch i {
-	case "3m":
-		return 3
-
 	case "5m":
 		return 5
 
@@ -114,6 +111,22 @@ func GetSubscriptions(stock string) []uint32 {
 		sSlice := strings.Split(s, ";")
 		if len(sSlice) >= 4 {
 			token = append(token, getUnit32(sSlice[2]))
+		}
+	}
+
+	return token
+}
+
+//GetSubscriptionsString returns '-' separated string of subscription IDs
+func GetSubscriptionsString(stock string) string {
+	token := ""
+
+	stocks := strings.Split(stock, ",")
+
+	for _, s := range stocks {
+		sSlice := strings.Split(s, ";")
+		if len(sSlice) >= 4 {
+			token = token + "-" + sSlice[2]
 		}
 	}
 

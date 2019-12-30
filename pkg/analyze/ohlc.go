@@ -9,6 +9,7 @@ import (
 
 const (
 	bullshMarubuzoAfterDecline = "BullishMarubuzoAfterDecline"
+	openLowHigh                = "OpenLowHigh"
 	doziAfterDecline           = "DoziAfterDecline"
 	bullishHammerAfterDecline  = "BullishHammerAfterDecline"
 	bearishHammerAfterDecline  = "BearishHammerAfterDecline"
@@ -21,11 +22,12 @@ const (
 )
 
 func (i *Instrument) ohlcAnalyser(result *Result) {
+
 	ohlc := *i.OHLC
 	shortTrend, _ := getShortTermTrend(ohlc[1:])
 	if shortTrend == "" {
 		log.Printf("No short term trend observed in the Instrument %s", i.Name)
-		return
+		//return
 	}
 
 	//Uptrend Indicators
@@ -84,6 +86,8 @@ func (r *Result) UpdateResult(resultType string, i *Instrument) {
 	defer r.Mux.Unlock()
 
 	switch resultType {
+	case openLowHigh:
+		r.OpenLowHigh = append(r.OpenLowHigh, *i)
 	case bullshMarubuzoAfterDecline:
 		r.BullishMarubuzoAfterDecline = append(r.BullishMarubuzoAfterDecline, *i)
 		break
@@ -139,6 +143,38 @@ func StoreOHLCResult(interval string, res *Result) error {
 		return fmt.Errorf("error storing ohlc analysis result. %+v", err)
 	}
 	return nil
+}
+
+//GetLastesStockData get latest stock data
+func GetLastesStockData(token string) (map[string]StockData, error) {
+	url := fmt.Sprintf(LatestStockDataAPI, os.Getenv("TICK_STORE_API"), token)
+	log.Println("SP - url - ", url)
+	resp, err := getWithAuth(url, os.Getenv("API_USER_NAME"), os.Getenv("API_PASSWORD"))
+	if err != nil {
+		return nil, fmt.Errorf("error fetching ohlc. %+v", err)
+	}
+
+	log.Printf("Body %+v", resp.Body)
+	var result map[string]StockData
+	json.NewDecoder(resp.Body).Decode(&result)
+	return result, nil
+
+}
+
+func getOpenLowHigh(token string) []Instrument {
+
+	olhInsturmentList := []Instrument{}
+	resMap, _ := GetLastesStockData(token)
+
+	for _, res := range resMap {
+		if res.Open == res.Low || res.Open == res.High {
+			insturment := NewInsturment(res.Name, res.Symnbol, res.Token, res.Exchange, nil)
+			olhInsturmentList = append(olhInsturmentList, *insturment)
+		}
+	}
+
+	return olhInsturmentList
+
 }
 
 //Gives the trend before the current Candlestick pattern

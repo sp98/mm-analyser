@@ -10,6 +10,10 @@ import (
 var (
 	//DailyOHCLAPI is the API url for fetching daily OHLC data for an instrument
 	DailyOHCLAPI = "%s/v1/api/ohlc/%s/%s"
+
+	//LatestStockDataAPI is the API end point to get the latest stock data
+	LatestStockDataAPI = "%s/v1/api/stocks/%s"
+
 	//ResultStoreAPI is the API end point to store the OHLC analysis results.
 	ResultStoreAPI = "%s/v1/api/ohlcresult/%s"
 )
@@ -52,6 +56,22 @@ type OHLC struct {
 	Close float64 `json:"Close"`
 }
 
+//StockData is the struct for latest stock data
+type StockData struct {
+	Name              string  `json:"Name"`
+	Symnbol           string  `json:"Symnbol"`
+	Exchange          string  `json:"Exchange"`
+	Token             string  `json:"Token"`
+	LastPrice         float64 `json:"LastPrice"`
+	AverageTradePrice float64 `json:"AverageTradePrice"`
+	TotalBuy          float64 `json:"TotalBuy"`
+	TotalSell         float64 `json:"TotalSell"`
+	Open              float64 `json:"Open"`
+	High              float64 `json:"High"`
+	Low               float64 `json:"Low"`
+	Close             float64 `json:"Close"`
+}
+
 //NewInsturment creats a new instrument
 func NewInsturment(name, symbol, token, exchange string, ohlc *[]OHLC) *Instrument {
 	return &Instrument{
@@ -69,12 +89,16 @@ func StartAnalysis(stocks, interval string) {
 	stockList := utility.GetStocks(stocks)
 	result := &Result{Mux: &sync.Mutex{}}
 
+	//Open Low High Analysis
+	OpenLowHighAnalysis(stocks, result)
+
 	for _, stock := range stockList {
 		wg.Add(1)
 		ohlc, err := GetOHLC(stock[2], interval)
 		if err != nil {
 			log.Printf("error in setup for stock %q. %+v", stock[0], err)
 		}
+		log.Printf("Stock - %v", stock)
 		insturment := NewInsturment(stock[0], stock[1], stock[2], stock[3], ohlc)
 
 		go insturment.Analyze(result, &wg)
@@ -92,8 +116,23 @@ func StartAnalysis(stocks, interval string) {
 func (i *Instrument) Analyze(result *Result, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Printf("Analyzing the instrument - %+v ", i)
-	//log.Printf("Instrument OHLC - %+v", i.OHLC)
+	if len(*i.OHLC) <= 3 {
+		log.Printf("skip analysis for stock %q as number of candle sticks are less than 3", i.Name)
+		return
+	}
+	log.Printf("Instrument OHLC - %+v", i.OHLC)
 
 	i.ohlcAnalyser(result)
+
+}
+
+//OpenLowHighAnalysis does openlowhigh analysis
+func OpenLowHighAnalysis(stocks string, result *Result) {
+	//Update Open Low High Results
+	tokenString := utility.GetSubscriptionsString(stocks)
+	olhResultList := getOpenLowHigh(tokenString)
+	for _, ohlcResult := range olhResultList {
+		result.UpdateResult(openLowHigh, &ohlcResult)
+	}
 
 }
