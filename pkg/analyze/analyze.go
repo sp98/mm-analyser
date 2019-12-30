@@ -96,7 +96,7 @@ func StartAnalysis(stocks, interval string) {
 		wg.Add(1)
 		ohlc, err := GetOHLC(stock[2], interval)
 		if err != nil {
-			log.Printf("error in setup for stock %q. %+v", stock[0], err)
+			log.Printf("error in setup for stock - %q. %+v", stock[0], err)
 		}
 		log.Printf("Stock - %v", stock)
 		insturment := NewInsturment(stock[0], stock[1], stock[2], stock[3], ohlc)
