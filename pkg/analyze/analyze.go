@@ -44,8 +44,15 @@ type Result struct {
 	ShootingStartAfterRally   []Instrument `json:"ShootingStartAfterRally"`
 	EndOfRally                []Instrument `json:"EndofRally"`
 
-	//Others
+	//Opending Trends
 	OpenLowHigh []Instrument `json:"OpenLowHigh"`
+
+	//Other chart types
+	BullishMarubuzo []Instrument `json:"BullishMarubuzo"`
+	BearishMarubuzo []Instrument `json:"BearishMarubuzo"`
+	Dozi            []Instrument `json:"Dozi"`
+	Hammer          []Instrument `json:"Hammer"`
+	ShootingStar    []Instrument `json:"ShootingStar"`
 }
 
 //OHLC is the open, high, low and close price for an instrument.
@@ -98,7 +105,6 @@ func StartAnalysis(stocks, interval string) {
 		if err != nil {
 			log.Printf("error in setup for stock - %q. %+v", stock[0], err)
 		}
-		log.Printf("Stock - %v", stock)
 		insturment := NewInsturment(stock[0], stock[1], stock[2], stock[3], ohlc)
 
 		go insturment.Analyze(result, &wg)
@@ -120,7 +126,7 @@ func (i *Instrument) Analyze(result *Result, wg *sync.WaitGroup) {
 		log.Printf("skip analysis for stock %q as number of candle sticks are less than 3", i.Name)
 		return
 	}
-	log.Printf("Instrument OHLC - %+v", i.OHLC)
+	//log.Printf("Instrument OHLC - %+v", i.OHLC)
 
 	i.ohlcAnalyser(result)
 

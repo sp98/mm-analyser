@@ -19,63 +19,102 @@ const (
 	shootingStarAfterDecline   = "ShootingStarAfterDecline"
 	shootingStartAfterRally    = "ShootingStartAfterRally"
 	endOfRally                 = "EndOfRally"
+	bullishMarubuzo            = "BullishMarubuzo"
+	bearishMarubuzo            = "BearishMarubuzo"
+	dozi                       = "Dozi"
+	hammer                     = "Hammer"
+	shootingStar               = "ShootingStar"
 )
 
 func (i *Instrument) ohlcAnalyser(result *Result) {
 
 	ohlc := *i.OHLC
-	shortTrend, _ := getShortTermTrend(ohlc[1:])
+	shortTrend, count := getShortTermTrend(ohlc[1:])
 	if shortTrend == "" {
 		log.Printf("No short term trend observed in the Instrument %s", i.Name)
-		//return
 	}
 
 	//Uptrend Indicators
 	isBullishMaru := isBullishMarubuzo(ohlc[0])
-	if shortTrend == "decline" && isBullishMaru {
+	if shortTrend == "decline" && count >= 3 && isBullishMaru {
 		result.UpdateResult(bullshMarubuzoAfterDecline, i)
-		return
+
 	}
 
 	isDozi := isDozi(ohlc[0])
-	if shortTrend == "decline" && isDozi {
+	if shortTrend == "decline" && count >= 3 && isDozi {
 		result.UpdateResult(doziAfterDecline, i)
-		return
+
 	}
 
 	isbullishHammer := isBullishHammer(ohlc[0])
-	if shortTrend == "decline" && isbullishHammer {
+	if shortTrend == "decline" && count >= 3 && isbullishHammer {
 		result.UpdateResult(bullishHammerAfterDecline, i)
-		return
+
 	}
 
 	isbearishHammer := isBearishHammer(ohlc[0])
-	if shortTrend == "decline" && isbearishHammer {
+	if shortTrend == "decline" && count >= 3 && isbearishHammer {
 		result.UpdateResult(bearishHammerAfterDecline, i)
-		return
+
+	}
+
+	if hasDeclineEnded(shortTrend, count, ohlc[0:2]) {
+		result.UpdateResult(endOfDecline, i)
+
 	}
 
 	//Downtrend Indicators
 	isBearishMaru := isBearishMarubuzo(ohlc[0])
-	if shortTrend == "rally" && isBearishMaru {
+	if shortTrend == "rally" && count >= 3 && isBearishMaru {
 		result.UpdateResult(bearishMarubuzoAfterRally, i)
-		return
+
 	}
 
-	if shortTrend == "rally" && isDozi {
-		result.UpdateResult(bullshMarubuzoAfterDecline, i)
-		return
+	if shortTrend == "rally" && count >= 3 && isDozi {
+		result.UpdateResult(doziAfterRally, i)
+
 	}
 
 	isinvertedHammer := isInvertedHammer(ohlc[0])
-	if shortTrend == "rally" && isinvertedHammer {
+	if shortTrend == "rally" && count >= 3 && isinvertedHammer {
 		result.UpdateResult(shootingStartAfterRally, i)
-		return
+
 	}
 
-	if shortTrend == "rally" && isDozi {
+	if shortTrend == "rally" && count >= 3 && isDozi {
 		result.UpdateResult(doziAfterRally, i)
-		return
+
+	}
+
+	if hasRallyEnded(shortTrend, count, ohlc[0:2]) {
+		result.UpdateResult(endOfRally, i)
+
+	}
+
+	//Other candlestick types:
+	if isDozi {
+		result.UpdateResult(dozi, i)
+	}
+
+	if isBullishMaru {
+		result.UpdateResult(bullishMarubuzo, i)
+	}
+
+	if isBearishMaru {
+		result.UpdateResult(bearishMarubuzo, i)
+	}
+
+	if isbullishHammer {
+		result.UpdateResult(hammer, i)
+	}
+
+	if isbearishHammer {
+		result.UpdateResult(hammer, i)
+	}
+
+	if isinvertedHammer {
+		result.UpdateResult(shootingStar, i)
 	}
 
 }
@@ -117,6 +156,21 @@ func (r *Result) UpdateResult(resultType string, i *Instrument) {
 		break
 	case endOfRally:
 		r.EndOfRally = append(r.EndOfRally, *i)
+		break
+	case bearishMarubuzo:
+		r.BearishMarubuzo = append(r.BearishMarubuzo, *i)
+		break
+	case bullishMarubuzo:
+		r.BullishMarubuzo = append(r.BullishMarubuzo, *i)
+		break
+	case dozi:
+		r.Dozi = append(r.Dozi, *i)
+		break
+	case hammer:
+		r.Hammer = append(r.Hammer, *i)
+		break
+	case shootingStar:
+		r.ShootingStar = append(r.ShootingStar, *i)
 		break
 	}
 
@@ -186,39 +240,31 @@ func getShortTermTrend(ohlcList []OHLC) (string, int) {
 		return trend, trendCount
 	}
 
-	//Last three candles should make higher highs and lower lows for Rally
-	for i := 0; i < len(ohlcList)-1; i++ {
-		if ohlcList[i].High > ohlcList[i+1].High && ohlcList[i].Low > ohlcList[i+1].Low { //Todo: should equality also be used.
-			trendCount = trendCount + 1
-			continue
-		}
-		//If updtrend count is >=3, then consider it as a rally
-		if trendCount >= 3 {
-			trend = "rally"
+	if ohlcList[0].High > ohlcList[1].High && ohlcList[0].Low > ohlcList[1].Low {
+		trend = "rally"
+		for i := 0; i < len(ohlcList)-1; i++ {
+			if ohlcList[i].High > ohlcList[i+1].High && ohlcList[i].Low > ohlcList[i+1].Low {
+				trendCount = trendCount + 1
+				continue
+			}
 			return trend, trendCount
 		}
+		return trend, trendCount
+
+	} else if ohlcList[0].High < ohlcList[1].High && ohlcList[0].Low < ohlcList[1].Low {
+		trend = "decline"
+		for i := 0; i < len(ohlcList)-1; i++ {
+			if ohlcList[i].High < ohlcList[i+1].High && ohlcList[i].Low < ohlcList[i+1].Low {
+				trendCount = trendCount + 1
+				continue
+			}
+			return trend, trendCount
+		}
+		return trend, trendCount
 
 	}
 
-	//Reintialize trendcount back to 0
-	trendCount = 0
-
-	//Last three candles should make lower highs and higher lows for decline
-	for i := 0; i < len(ohlcList)-1; i++ {
-		if ohlcList[i].High < ohlcList[i+1].High && ohlcList[i].Low < ohlcList[i+1].Low {
-			trendCount = trendCount + 1
-			continue
-		}
-		//If downtrend count is >=3, then consider it as a decline
-		if trendCount >= 3 {
-			trend = "decline"
-			return trend, trendCount
-		}
-	}
-
-	//No trend found and trend count should be 0
-	return trend, 0
-
+	return "", 0
 }
 
 func isBullish(ohlcList []OHLC) (bool, int) {
@@ -363,4 +409,28 @@ func higherLowsEngulfingPatternCount(ohlc []OHLC) int {
 		return count
 	}
 	return count
+}
+
+func hasRallyEnded(trend string, trendCount int, ohlc []OHLC) bool {
+	if trend == "rally" && trendCount >= 3 {
+		if len(ohlc) == 2 {
+			// Rally ends if the latest candlestick is red or if  Higher high and higher lows are not made.
+			if ohlc[0].Open > ohlc[0].Close || ohlc[0].High < ohlc[1].High || ohlc[0].Low < ohlc[1].High {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func hasDeclineEnded(trend string, trendCount int, ohlc []OHLC) bool {
+	if trend == "decline" && trendCount >= 3 {
+		if len(ohlc) == 2 {
+			// Decline ends if Lower high and Lower lows are not made. Or if the latest candlestick is green
+			if ohlc[0].Open < ohlc[0].Close || ohlc[0].High > ohlc[1].High || ohlc[0].Low > ohlc[1].High {
+				return true
+			}
+		}
+	}
+	return false
 }
