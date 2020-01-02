@@ -11,6 +11,8 @@ var (
 	//DailyOHCLAPI is the API url for fetching daily OHLC data for an instrument
 	DailyOHCLAPI = "%s/v1/api/ohlc/%s/%s"
 
+	//SpecificOHCLAPI is the API url for fetching OHLC data for an instrument from a specific time period
+	SpecificOHCLAPI = "%s/v1/api/ohlc/%s/%s?from=%s&to=%s"
 	//LatestStockDataAPI is the API end point to get the latest stock data
 	LatestStockDataAPI = "%s/v1/api/stocks/%s"
 
@@ -47,7 +49,7 @@ type Result struct {
 	//Opending Trends
 	OpenLowHigh []Instrument `json:"OpenLowHigh"`
 
-	//Other chart types
+	//Other chart patterns
 	BullishMarubuzo []Instrument `json:"BullishMarubuzo"`
 	BearishMarubuzo []Instrument `json:"BearishMarubuzo"`
 	Dozi            []Instrument `json:"Dozi"`
@@ -97,7 +99,12 @@ func StartAnalysis(stocks, interval string) {
 	result := &Result{Mux: &sync.Mutex{}}
 
 	//Open Low High Analysis
-	OpenLowHighAnalysis(stocks, result)
+	isWithInActualMarketOpenTime, _ := utility.IsWithInActualMarketOpenTime()
+
+	if isWithInActualMarketOpenTime {
+		log.Println("within actual market open time. so analyzing open low high strategy")
+		OpenLowHighAnalysis(stocks, result)
+	}
 
 	for _, stock := range stockList {
 		wg.Add(1)
@@ -126,7 +133,6 @@ func (i *Instrument) Analyze(result *Result, wg *sync.WaitGroup) {
 		log.Printf("skip analysis for stock %q as number of candle sticks are less than 3", i.Name)
 		return
 	}
-	//log.Printf("Instrument OHLC - %+v", i.OHLC)
 
 	i.ohlcAnalyser(result)
 

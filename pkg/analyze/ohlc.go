@@ -7,6 +7,13 @@ import (
 	"os"
 )
 
+var (
+	//FromTime queries influx db from specific time period.
+	FromTime = ""
+	//ToTime queries influx db till specific time period.
+	ToTime = ""
+)
+
 const (
 	bullshMarubuzoAfterDecline = "BullishMarubuzoAfterDecline"
 	openLowHigh                = "OpenLowHigh"
@@ -31,7 +38,9 @@ func (i *Instrument) ohlcAnalyser(result *Result) {
 	ohlc := *i.OHLC
 	shortTrend, count := getShortTermTrend(ohlc[1:])
 	if shortTrend == "" {
-		log.Printf("No short term trend observed in the Instrument %s", i.Name)
+		log.Printf("no short term ternd observed in the instrument %q", i.Name)
+	} else {
+		log.Printf("short term trend of %q with count %d is observed in the instrument %q", shortTrend, count, i.Name)
 	}
 
 	//Uptrend Indicators
@@ -68,11 +77,6 @@ func (i *Instrument) ohlcAnalyser(result *Result) {
 	isBearishMaru := isBearishMarubuzo(ohlc[0])
 	if shortTrend == "rally" && count >= 3 && isBearishMaru {
 		result.UpdateResult(bearishMarubuzoAfterRally, i)
-
-	}
-
-	if shortTrend == "rally" && count >= 3 && isDozi {
-		result.UpdateResult(doziAfterRally, i)
 
 	}
 
@@ -121,6 +125,7 @@ func (i *Instrument) ohlcAnalyser(result *Result) {
 
 //UpdateResult updates the analysis result
 func (r *Result) UpdateResult(resultType string, i *Instrument) {
+	i.OHLC = nil // Don't store ohlc data for now.
 	r.Mux.Lock()
 	defer r.Mux.Unlock()
 
@@ -178,7 +183,13 @@ func (r *Result) UpdateResult(resultType string, i *Instrument) {
 
 //GetOHLC fetches the OHLC data for an instruement form the TickStore Rest API
 func GetOHLC(token, interval string) (*[]OHLC, error) {
-	url := fmt.Sprintf(DailyOHCLAPI, os.Getenv("TICK_STORE_API"), token, interval)
+	var url string
+	if FromTime != "" && ToTime != "" {
+		url = fmt.Sprintf(SpecificOHCLAPI, os.Getenv("TICK_STORE_API"), token, interval, FromTime, ToTime)
+	} else {
+		url = fmt.Sprintf(DailyOHCLAPI, os.Getenv("TICK_STORE_API"), token, interval)
+	}
+
 	resp, err := getWithAuth(url, os.Getenv("API_USER_NAME"), os.Getenv("API_PASSWORD"))
 	if err != nil {
 		return nil, fmt.Errorf("error fetching ohlc. %+v", err)
@@ -202,13 +213,11 @@ func StoreOHLCResult(interval string, res *Result) error {
 //GetLastesStockData get latest stock data
 func GetLastesStockData(token string) (map[string]StockData, error) {
 	url := fmt.Sprintf(LatestStockDataAPI, os.Getenv("TICK_STORE_API"), token)
-	log.Println("SP - url - ", url)
 	resp, err := getWithAuth(url, os.Getenv("API_USER_NAME"), os.Getenv("API_PASSWORD"))
 	if err != nil {
 		return nil, fmt.Errorf("error fetching ohlc. %+v", err)
 	}
 
-	log.Printf("Body %+v", resp.Body)
 	var result map[string]StockData
 	json.NewDecoder(resp.Body).Decode(&result)
 	return result, nil
