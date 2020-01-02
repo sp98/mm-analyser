@@ -7,10 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getInsturement() {
-
-}
-
 func TestRallyTrend(t *testing.T) {
 	//result := &Result{Mux: &sync.Mutex{}}
 	ohlc := &[]OHLC{}

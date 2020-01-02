@@ -11,7 +11,7 @@ import (
 const (
 	MarketOpenTime       = "%s 9:00:00"
 	MarketCloseTime      = "%s 15:30:00"
-	MarketActualOpenTime = "%s 09:13:00 MST"
+	ActualMarketOpenTime = "%s 09:10:00"
 	TstringFormat        = "2006-01-02 15:04:05"
 	LayOut               = "2006-01-02 15:04:05"
 	InfluxLayout         = "2006-01-02T15:04:05Z"
@@ -67,6 +67,30 @@ func IsWithInMarketOpenTime() (bool, error) {
 	return false, nil
 
 }
+
+//IsWithInActualMarketOpenTime tells whether current time is within actual market open time.
+func IsWithInActualMarketOpenTime() (bool, error) {
+	loc, _ := time.LoadLocation("Asia/Kolkata")
+	amotString := fmt.Sprintf(ActualMarketOpenTime, time.Now().Format("2006-01-02"))
+	amot, err := time.ParseInLocation("2006-01-02 15:04:05", amotString, loc)
+	if err != nil {
+		return false, fmt.Errorf("error parsing market open time. %+v", err)
+	}
+
+	mctString := fmt.Sprintf(MarketCloseTime, time.Now().Format("2006-01-02"))
+	mct, err := time.ParseInLocation("2006-01-02 15:04:05", mctString, loc)
+	if err != nil {
+		return false, fmt.Errorf("error parsing market open time. %+v", err)
+	}
+
+	currentTime := time.Now()
+	if currentTime.After(amot) && currentTime.Before(mct) && currentTime.Weekday() != 6 && currentTime.Weekday() != 7 {
+		return true, nil
+	}
+	return false, nil
+
+}
+
 func parseTime(format string, tstring string) (time.Time, error) {
 	parsedTime, err := time.Parse(format, tstring)
 	if err != nil {

@@ -12,7 +12,7 @@ import (
 
 const (
 	//IntervalEnv is the environment variable for 5 minutes interval
-	IntervalEnv = "INTERVAL_5M"
+	IntervalEnv = "ANALYZER_INTERVAL"
 	//StocksEnv is the environment variable for list of stocks to analyse
 	StocksEnv = "STOCKS"
 )
@@ -36,6 +36,12 @@ func init() {
 }
 
 func main() {
+	log.Println("command line args - ", os.Args[1:])
+	if len(os.Args) > 1 {
+		analyze.FromTime = os.Args[1]
+		analyze.ToTime = os.Args[2]
+	}
+
 	log.Println("--- START ANALYSER  ---")
 	utility.IsMarketOpen()
 	setup()
@@ -43,7 +49,6 @@ func main() {
 
 func setup() {
 	//Get all the stocks in a 2D array with format - Instrument Name, Sybmol, Token, Exchange, Interval
-
 	intervalInt := utility.GetInterval(interval)
 	waitFor := utility.WaitBeforeAnalysis(intervalInt)
 	if waitFor > 0 {
