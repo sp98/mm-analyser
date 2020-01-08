@@ -11,7 +11,7 @@ import (
 const (
 	MarketOpenTime       = "%s 9:00:00"
 	MarketCloseTime      = "%s 15:30:00"
-	ActualMarketOpenTime = "%s 09:10:00"
+	ActualMarketOpenTime = "%s 09:15:00"
 	TstringFormat        = "2006-01-02 15:04:05"
 	LayOut               = "2006-01-02 15:04:05"
 	InfluxLayout         = "2006-01-02T15:04:05Z"
