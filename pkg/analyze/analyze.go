@@ -33,14 +33,14 @@ type Instrument struct {
 type Result struct {
 	Mux *sync.Mutex
 	//Uptrend indicators
-	BullishMarubuzoAfterDecline []Instrument `json:"BullishMarubuzoAfterDecline"`
+	BullishMarubozuAfterDecline []Instrument `json:"BullishMarubozuAfterDecline"`
 	DoziAfterDecline            []Instrument `json:"DoziAfterDecline"`
 	BullishHammerAfterDecline   []Instrument `json:"BullishHammerAfterDecline"`
 	BearishHammerAfterDecline   []Instrument `json:"BearishHammerAfterDecline"`
 	EndOfDecline                []Instrument `json:"EndOfDecline"`
 
 	//Downtrend Indicators
-	BearishMarubuzoAfterRally []Instrument `json:"BearishMarubuzoAfterRally"`
+	BearishMarubozuAfterRally []Instrument `json:"BearishMarubozuAfterRally"`
 	DoziAfterRally            []Instrument `json:"DoziAfterRally"`
 	ShootingStarAfterDecline  []Instrument `json:"ShootingStarAfterDecline"`
 	ShootingStartAfterRally   []Instrument `json:"ShootingStartAfterRally"`
@@ -50,8 +50,8 @@ type Result struct {
 	OpenHighLow []Instrument `json:"OpenHighLow"`
 
 	//Other chart patterns
-	BullishMarubuzo []Instrument `json:"BullishMarubuzo"`
-	BearishMarubuzo []Instrument `json:"BearishMarubuzo"`
+	BullishMarubozu []Instrument `json:"BullishMarubozu"`
+	BearishMarubozu []Instrument `json:"BearishMarubozu"`
 	Dozi            []Instrument `json:"Dozi"`
 	Hammer          []Instrument `json:"Hammer"`
 	ShootingStar    []Instrument `json:"ShootingStar"`

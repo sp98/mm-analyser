@@ -15,19 +15,19 @@ var (
 )
 
 const (
-	bullshMarubuzoAfterDecline = "BullishMarubuzoAfterDecline"
+	bullshMarubozuAfterDecline = "BullishMarubozuAfterDecline"
 	openHighLow                = "OpenHighLow"
 	doziAfterDecline           = "DoziAfterDecline"
 	bullishHammerAfterDecline  = "BullishHammerAfterDecline"
 	bearishHammerAfterDecline  = "BearishHammerAfterDecline"
 	endOfDecline               = "EndOfDecline"
-	bearishMarubuzoAfterRally  = "BearishMarubuzoAfterRally"
+	bearishMarubozuAfterRally  = "BearishMarubozuAfterRally"
 	doziAfterRally             = "DoziAfterRally"
 	shootingStarAfterDecline   = "ShootingStarAfterDecline"
 	shootingStartAfterRally    = "ShootingStartAfterRally"
 	endOfRally                 = "EndOfRally"
-	bullishMarubuzo            = "BullishMarubuzo"
-	bearishMarubuzo            = "BearishMarubuzo"
+	bullishMarubozu            = "BullishMarubozu"
+	bearishMarubozu            = "BearishMarubozu"
 	dozi                       = "Dozi"
 	hammer                     = "Hammer"
 	shootingStar               = "ShootingStar"
@@ -44,9 +44,9 @@ func (i *Instrument) ohlcAnalyser(result *Result) {
 	}
 
 	//Uptrend Indicators
-	isBullishMaru := isBullishMarubuzo(ohlc[0])
+	isBullishMaru := isBullishMarubozu(ohlc[0])
 	if shortTrend == "decline" && count >= 3 && isBullishMaru {
-		result.UpdateResult(bullshMarubuzoAfterDecline, i)
+		result.UpdateResult(bullshMarubozuAfterDecline, i)
 
 	}
 
@@ -74,9 +74,9 @@ func (i *Instrument) ohlcAnalyser(result *Result) {
 	}
 
 	//Downtrend Indicators
-	isBearishMaru := isBearishMarubuzo(ohlc[0])
+	isBearishMaru := isBearishMarubozu(ohlc[0])
 	if shortTrend == "rally" && count >= 3 && isBearishMaru {
-		result.UpdateResult(bearishMarubuzoAfterRally, i)
+		result.UpdateResult(bearishMarubozuAfterRally, i)
 
 	}
 
@@ -102,11 +102,11 @@ func (i *Instrument) ohlcAnalyser(result *Result) {
 	}
 
 	if isBullishMaru {
-		result.UpdateResult(bullishMarubuzo, i)
+		result.UpdateResult(bullishMarubozu, i)
 	}
 
 	if isBearishMaru {
-		result.UpdateResult(bearishMarubuzo, i)
+		result.UpdateResult(bearishMarubozu, i)
 	}
 
 	if isbullishHammer {
@@ -132,8 +132,8 @@ func (r *Result) UpdateResult(resultType string, i *Instrument) {
 	switch resultType {
 	case openHighLow:
 		r.OpenHighLow = append(r.OpenHighLow, *i)
-	case bullshMarubuzoAfterDecline:
-		r.BullishMarubuzoAfterDecline = append(r.BullishMarubuzoAfterDecline, *i)
+	case bullshMarubozuAfterDecline:
+		r.BullishMarubozuAfterDecline = append(r.BullishMarubozuAfterDecline, *i)
 		break
 	case doziAfterDecline:
 		r.DoziAfterDecline = append(r.DoziAfterDecline, *i)
@@ -147,8 +147,8 @@ func (r *Result) UpdateResult(resultType string, i *Instrument) {
 	case endOfDecline:
 		r.EndOfDecline = append(r.EndOfDecline, *i)
 		break
-	case bearishMarubuzoAfterRally:
-		r.BearishMarubuzoAfterRally = append(r.BearishMarubuzoAfterRally, *i)
+	case bearishMarubozuAfterRally:
+		r.BearishMarubozuAfterRally = append(r.BearishMarubozuAfterRally, *i)
 		break
 	case doziAfterRally:
 		r.DoziAfterRally = append(r.DoziAfterRally, *i)
@@ -162,11 +162,11 @@ func (r *Result) UpdateResult(resultType string, i *Instrument) {
 	case endOfRally:
 		r.EndOfRally = append(r.EndOfRally, *i)
 		break
-	case bearishMarubuzo:
-		r.BearishMarubuzo = append(r.BearishMarubuzo, *i)
+	case bearishMarubozu:
+		r.BearishMarubozu = append(r.BearishMarubozu, *i)
 		break
-	case bullishMarubuzo:
-		r.BullishMarubuzo = append(r.BullishMarubuzo, *i)
+	case bullishMarubozu:
+		r.BullishMarubozu = append(r.BullishMarubozu, *i)
 		break
 	case dozi:
 		r.Dozi = append(r.Dozi, *i)
@@ -316,7 +316,7 @@ func isBearish(csDetails []OHLC) (bool, int) {
 
 }
 
-func isBullishMarubuzo(csDetails OHLC) bool {
+func isBullishMarubozu(csDetails OHLC) bool {
 	if csDetails.Open < csDetails.Close {
 		if csDetails.Open == csDetails.Low && csDetails.Close == csDetails.High {
 			return true
@@ -332,7 +332,7 @@ func isBullishMarubuzo(csDetails OHLC) bool {
 
 }
 
-func isBearishMarubuzo(ohlc OHLC) bool {
+func isBearishMarubozu(ohlc OHLC) bool {
 
 	if ohlc.Open > ohlc.Close {
 		if ohlc.Open == ohlc.High && ohlc.Close == ohlc.Low {
