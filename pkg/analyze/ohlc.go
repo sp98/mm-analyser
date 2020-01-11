@@ -125,7 +125,7 @@ func (i *Instrument) ohlcAnalyser(result *Result) {
 
 //UpdateResult updates the analysis result
 func (r *Result) UpdateResult(resultType string, i *Instrument) {
-	i.OHLC = nil // Don't store ohlc data for now.
+	// i.OHLC = nil // Don't store ohlc data for now.
 	r.Mux.Lock()
 	defer r.Mux.Unlock()
 
