@@ -16,7 +16,7 @@ var (
 
 const (
 	bullshMarubuzoAfterDecline = "BullishMarubuzoAfterDecline"
-	openLowHigh                = "OpenLowHigh"
+	openHighLow                = "OpenHighLow"
 	doziAfterDecline           = "DoziAfterDecline"
 	bullishHammerAfterDecline  = "BullishHammerAfterDecline"
 	bearishHammerAfterDecline  = "BearishHammerAfterDecline"
@@ -130,8 +130,8 @@ func (r *Result) UpdateResult(resultType string, i *Instrument) {
 	defer r.Mux.Unlock()
 
 	switch resultType {
-	case openLowHigh:
-		r.OpenLowHigh = append(r.OpenLowHigh, *i)
+	case openHighLow:
+		r.OpenHighLow = append(r.OpenHighLow, *i)
 	case bullshMarubuzoAfterDecline:
 		r.BullishMarubuzoAfterDecline = append(r.BullishMarubuzoAfterDecline, *i)
 		break
@@ -224,8 +224,7 @@ func GetLastesStockData(token string) (map[string]StockData, error) {
 
 }
 
-func getOpenLowHigh(token string) []Instrument {
-
+func getOpenHighLow(token string) []Instrument {
 	olhInsturmentList := []Instrument{}
 	resMap, _ := GetLastesStockData(token)
 

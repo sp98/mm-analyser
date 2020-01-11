@@ -47,7 +47,7 @@ type Result struct {
 	EndOfRally                []Instrument `json:"EndofRally"`
 
 	//Opending Trends
-	OpenLowHigh []Instrument `json:"OpenLowHigh"`
+	OpenHighLow []Instrument `json:"OpenHighLow"`
 
 	//Other chart patterns
 	BullishMarubuzo []Instrument `json:"BullishMarubuzo"`
@@ -103,7 +103,7 @@ func StartAnalysis(stocks, interval string) {
 
 	if isWithInActualMarketOpenTime {
 		log.Println("within actual market open time. so analyzing open low high strategy")
-		OpenLowHighAnalysis(stocks, result)
+		OpenHighLowAnalysis(stocks, result)
 	}
 
 	for _, stock := range stockList {
@@ -138,13 +138,13 @@ func (i *Instrument) Analyze(result *Result, wg *sync.WaitGroup) {
 
 }
 
-//OpenLowHighAnalysis does openlowhigh analysis
-func OpenLowHighAnalysis(stocks string, result *Result) {
+//OpenHighLowAnalysis does openhighlow analysis
+func OpenHighLowAnalysis(stocks string, result *Result) {
 	//Update Open Low High Results
 	tokenString := utility.GetSubscriptionsString(stocks)
-	olhResultList := getOpenLowHigh(tokenString)
+	olhResultList := getOpenHighLow(tokenString)
 	for _, ohlcResult := range olhResultList {
-		result.UpdateResult(openLowHigh, &ohlcResult)
+		result.UpdateResult(openHighLow, &ohlcResult)
 	}
 
 }
