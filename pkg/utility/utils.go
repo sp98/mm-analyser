@@ -9,18 +9,22 @@ import (
 )
 
 const (
-	MarketOpenTime       = "%s 9:00:00"
-	MarketCloseTime      = "%s 15:30:00"
-	ActualMarketOpenTime = "%s 09:15:00"
-	TstringFormat        = "2006-01-02 15:04:05"
-	LayOut               = "2006-01-02 15:04:05"
-	InfluxLayout         = "2006-01-02T15:04:05Z"
+	MarketOpenTime             = "%s 9:00:00"
+	MarketCloseTime            = "%s 15:30:00"
+	ActualMarketOpenTime       = "%s 09:30:00"
+	PreMarketOpenAnalysisTime1 = "%s 9:13:00"
+	PreMarketOpenAnalysisTime2 = "%s 9:15:00"
+	TstringFormat              = "2006-01-02 15:04:05"
+	LayOut                     = "2006-01-02 15:04:05"
+	InfluxLayout               = "2006-01-02T15:04:05Z"
 )
 
 //IsMarketOpen returns true if market is open or viceversa
-func IsMarketOpen() {
+func IsMarketOpen(interval string) {
+
+	marketOpenTime := getMarketOpenTime(interval)
 	for {
-		t, _ := IsWithInMarketOpenTime()
+		t, _ := IsWithInTimeRange(marketOpenTime, MarketCloseTime)
 		if t {
 			log.Println(" withhin market open time.")
 			break
@@ -29,6 +33,22 @@ func IsMarketOpen() {
 		time.Sleep(10 * time.Second)
 	}
 
+}
+
+func getMarketOpenTime(i string) string {
+	switch i {
+	case "5m":
+		return "%s 9:00:00"
+
+	case "10m":
+		return "%s 9:15:00"
+
+	case "15m":
+		return "%s 9:15:00"
+
+	default:
+		return "%s 9:00:00"
+	}
 }
 
 //WaitBeforeAnalysis returns the number of seconds we need to wait before the next analysis to start
@@ -84,7 +104,29 @@ func IsWithInActualMarketOpenTime() (bool, error) {
 	}
 
 	currentTime := time.Now()
-	if currentTime.After(amot) && currentTime.Before(mct) && currentTime.Weekday() != 6 && currentTime.Weekday() != 7 {
+	if currentTime.After(amot) && currentTime.Before(mct) && currentTime.Weekday() != 6 && currentTime.Weekday() != 0 {
+		return true, nil
+	}
+	return false, nil
+
+}
+
+func IsWithInTimeRange(time1, time2 string) (bool, error) {
+	loc, _ := time.LoadLocation("Asia/Kolkata")
+	t1String := fmt.Sprintf(time1, time.Now().Format("2006-01-02"))
+	t1, err := time.ParseInLocation("2006-01-02 15:04:05", t1String, loc)
+	if err != nil {
+		return false, fmt.Errorf("error parsing market open time. %+v", err)
+	}
+
+	t2String := fmt.Sprintf(time2, time.Now().Format("2006-01-02"))
+	t2, err := time.ParseInLocation("2006-01-02 15:04:05", t2String, loc)
+	if err != nil {
+		return false, fmt.Errorf("error parsing market open time. %+v", err)
+	}
+
+	currentTime := time.Now()
+	if currentTime.After(t1) && currentTime.Before(t2) && int(currentTime.Weekday()) != 6 && int(currentTime.Weekday()) != 0 {
 		return true, nil
 	}
 	return false, nil
