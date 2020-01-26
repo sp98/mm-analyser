@@ -43,7 +43,7 @@ func main() {
 	}
 
 	log.Println("--- START ANALYSER  ---")
-	utility.IsMarketOpen()
+	utility.IsMarketOpen(interval)
 	setup()
 }
 

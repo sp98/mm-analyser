@@ -15,19 +15,21 @@ var (
 )
 
 const (
-	bullshMarubuzoAfterDecline = "BullishMarubuzoAfterDecline"
-	openLowHigh                = "OpenLowHigh"
+	bullshMarubozuAfterDecline = "BullishMarubozuAfterDecline"
+	openHighLow                = "OpenHighLow"
+	moreBuyers                 = "MoreBuyers"
+	moreSellers                = "MoreSellers"
 	doziAfterDecline           = "DoziAfterDecline"
 	bullishHammerAfterDecline  = "BullishHammerAfterDecline"
 	bearishHammerAfterDecline  = "BearishHammerAfterDecline"
 	endOfDecline               = "EndOfDecline"
-	bearishMarubuzoAfterRally  = "BearishMarubuzoAfterRally"
+	bearishMarubozuAfterRally  = "BearishMarubozuAfterRally"
 	doziAfterRally             = "DoziAfterRally"
 	shootingStarAfterDecline   = "ShootingStarAfterDecline"
 	shootingStartAfterRally    = "ShootingStartAfterRally"
 	endOfRally                 = "EndOfRally"
-	bullishMarubuzo            = "BullishMarubuzo"
-	bearishMarubuzo            = "BearishMarubuzo"
+	bullishMarubozu            = "BullishMarubozu"
+	bearishMarubozu            = "BearishMarubozu"
 	dozi                       = "Dozi"
 	hammer                     = "Hammer"
 	shootingStar               = "ShootingStar"
@@ -36,64 +38,76 @@ const (
 func (i *Instrument) ohlcAnalyser(result *Result) {
 
 	ohlc := *i.OHLC
-	shortTrend, count := getShortTermTrend(ohlc[1:])
-	if shortTrend == "" {
-		log.Printf("no short term ternd observed in the instrument %q", i.Name)
-	} else {
-		log.Printf("short term trend of %q with count %d is observed in the instrument %q", shortTrend, count, i.Name)
+
+	if len(ohlc) == 0 {
+		log.Printf("skip analysis for stock %q as number of candle sticks are 0", i.Name)
+		return
 	}
-
-	//Uptrend Indicators
-	isBullishMaru := isBullishMarubuzo(ohlc[0])
-	if shortTrend == "decline" && count >= 3 && isBullishMaru {
-		result.UpdateResult(bullshMarubuzoAfterDecline, i)
-
-	}
-
+	//Current Candlestick Pattern Analyser
+	isBullishMaru := isBullishMarubozu(ohlc[0])
 	isDozi := isDozi(ohlc[0])
-	if shortTrend == "decline" && count >= 3 && isDozi {
-		result.UpdateResult(doziAfterDecline, i)
-
-	}
-
 	isbullishHammer := isBullishHammer(ohlc[0])
-	if shortTrend == "decline" && count >= 3 && isbullishHammer {
-		result.UpdateResult(bullishHammerAfterDecline, i)
-
-	}
-
 	isbearishHammer := isBearishHammer(ohlc[0])
-	if shortTrend == "decline" && count >= 3 && isbearishHammer {
-		result.UpdateResult(bearishHammerAfterDecline, i)
-
-	}
-
-	if hasDeclineEnded(shortTrend, count, ohlc[0:2]) {
-		result.UpdateResult(endOfDecline, i)
-
-	}
-
-	//Downtrend Indicators
-	isBearishMaru := isBearishMarubuzo(ohlc[0])
-	if shortTrend == "rally" && count >= 3 && isBearishMaru {
-		result.UpdateResult(bearishMarubuzoAfterRally, i)
-
-	}
-
+	isBearishMaru := isBearishMarubozu(ohlc[0])
 	isinvertedHammer := isInvertedHammer(ohlc[0])
-	if shortTrend == "rally" && count >= 3 && isinvertedHammer {
-		result.UpdateResult(shootingStartAfterRally, i)
 
-	}
+	//Only analyse the trend when the number of candlesticks are more than 3
+	if len(ohlc) >= 3 {
+		shortTrend, count := getShortTermTrend(ohlc[1:])
+		if shortTrend == "" {
+			log.Printf("no short term ternd observed in the instrument %q", i.Name)
+		} else {
+			log.Printf("short term trend of %q with count %d is observed in the instrument %q", shortTrend, count, i.Name)
+		}
 
-	if shortTrend == "rally" && count >= 3 && isDozi {
-		result.UpdateResult(doziAfterRally, i)
+		//Uptrend Indicators
 
-	}
+		if shortTrend == "decline" && count >= 3 && isBullishMaru {
+			result.UpdateResult(bullshMarubozuAfterDecline, i)
 
-	if hasRallyEnded(shortTrend, count, ohlc[0:2]) {
-		result.UpdateResult(endOfRally, i)
+		}
 
+		if shortTrend == "decline" && count >= 3 && isDozi {
+			result.UpdateResult(doziAfterDecline, i)
+
+		}
+
+		if shortTrend == "decline" && count >= 3 && isbullishHammer {
+			result.UpdateResult(bullishHammerAfterDecline, i)
+
+		}
+
+		if shortTrend == "decline" && count >= 3 && isbearishHammer {
+			result.UpdateResult(bearishHammerAfterDecline, i)
+
+		}
+
+		if hasDeclineEnded(shortTrend, count, ohlc[0:2]) {
+			result.UpdateResult(endOfDecline, i)
+
+		}
+
+		//Downtrend Indicators
+
+		if shortTrend == "rally" && count >= 3 && isBearishMaru {
+			result.UpdateResult(bearishMarubozuAfterRally, i)
+
+		}
+
+		if shortTrend == "rally" && count >= 3 && isinvertedHammer {
+			result.UpdateResult(shootingStartAfterRally, i)
+
+		}
+
+		if shortTrend == "rally" && count >= 3 && isDozi {
+			result.UpdateResult(doziAfterRally, i)
+
+		}
+
+		if hasRallyEnded(shortTrend, count, ohlc[0:2]) {
+			result.UpdateResult(endOfRally, i)
+
+		}
 	}
 
 	//Other candlestick types:
@@ -102,11 +116,11 @@ func (i *Instrument) ohlcAnalyser(result *Result) {
 	}
 
 	if isBullishMaru {
-		result.UpdateResult(bullishMarubuzo, i)
+		result.UpdateResult(bullishMarubozu, i)
 	}
 
 	if isBearishMaru {
-		result.UpdateResult(bearishMarubuzo, i)
+		result.UpdateResult(bearishMarubozu, i)
 	}
 
 	if isbullishHammer {
@@ -125,15 +139,17 @@ func (i *Instrument) ohlcAnalyser(result *Result) {
 
 //UpdateResult updates the analysis result
 func (r *Result) UpdateResult(resultType string, i *Instrument) {
-	i.OHLC = nil // Don't store ohlc data for now.
 	r.Mux.Lock()
 	defer r.Mux.Unlock()
 
 	switch resultType {
-	case openLowHigh:
-		r.OpenLowHigh = append(r.OpenLowHigh, *i)
-	case bullshMarubuzoAfterDecline:
-		r.BullishMarubuzoAfterDecline = append(r.BullishMarubuzoAfterDecline, *i)
+	case openHighLow:
+		r.OpenHighLow = append(r.OpenHighLow, *i)
+	case moreBuyers:
+		r.MoreBuyers = append(r.MoreBuyers, *i)
+		break
+	case bullshMarubozuAfterDecline:
+		r.BullishMarubozuAfterDecline = append(r.BullishMarubozuAfterDecline, *i)
 		break
 	case doziAfterDecline:
 		r.DoziAfterDecline = append(r.DoziAfterDecline, *i)
@@ -147,8 +163,11 @@ func (r *Result) UpdateResult(resultType string, i *Instrument) {
 	case endOfDecline:
 		r.EndOfDecline = append(r.EndOfDecline, *i)
 		break
-	case bearishMarubuzoAfterRally:
-		r.BearishMarubuzoAfterRally = append(r.BearishMarubuzoAfterRally, *i)
+	case moreSellers:
+		r.MoreSellers = append(r.MoreSellers, *i)
+		break
+	case bearishMarubozuAfterRally:
+		r.BearishMarubozuAfterRally = append(r.BearishMarubozuAfterRally, *i)
 		break
 	case doziAfterRally:
 		r.DoziAfterRally = append(r.DoziAfterRally, *i)
@@ -162,11 +181,11 @@ func (r *Result) UpdateResult(resultType string, i *Instrument) {
 	case endOfRally:
 		r.EndOfRally = append(r.EndOfRally, *i)
 		break
-	case bearishMarubuzo:
-		r.BearishMarubuzo = append(r.BearishMarubuzo, *i)
+	case bearishMarubozu:
+		r.BearishMarubozu = append(r.BearishMarubozu, *i)
 		break
-	case bullishMarubuzo:
-		r.BullishMarubuzo = append(r.BullishMarubuzo, *i)
+	case bullishMarubozu:
+		r.BullishMarubozu = append(r.BullishMarubozu, *i)
 		break
 	case dozi:
 		r.Dozi = append(r.Dozi, *i)
@@ -224,12 +243,10 @@ func GetLastesStockData(token string) (map[string]StockData, error) {
 
 }
 
-func getOpenLowHigh(token string) []Instrument {
-
+func getOpenHighLow(data map[string]StockData) []Instrument {
 	olhInsturmentList := []Instrument{}
-	resMap, _ := GetLastesStockData(token)
 
-	for _, res := range resMap {
+	for _, res := range data {
 		if res.Open == res.Low || res.Open == res.High {
 			insturment := NewInsturment(res.Name, res.Symnbol, res.Token, res.Exchange, nil)
 			olhInsturmentList = append(olhInsturmentList, *insturment)
@@ -238,6 +255,38 @@ func getOpenLowHigh(token string) []Instrument {
 
 	return olhInsturmentList
 
+}
+
+func getHigherBuyQuanities(data map[string]StockData) []Instrument {
+	olhInsturmentList := []Instrument{}
+	for _, res := range data {
+		if res.TotalBuy > res.TotalSell && percentChange(res.TotalBuy, res.TotalSell) > 50 {
+			insturment := NewInsturment(res.Name, res.Symnbol, res.Token, res.Exchange, nil)
+			olhInsturmentList = append(olhInsturmentList, *insturment)
+		}
+	}
+
+	return olhInsturmentList
+
+}
+
+func getHigherSellQuanities(data map[string]StockData) []Instrument {
+	olhInsturmentList := []Instrument{}
+	for _, res := range data {
+		if res.TotalSell > res.TotalBuy && percentChange(res.TotalSell, res.TotalBuy) > 50 {
+			insturment := NewInsturment(res.Name, res.Symnbol, res.Token, res.Exchange, nil)
+			olhInsturmentList = append(olhInsturmentList, *insturment)
+		}
+	}
+
+	return olhInsturmentList
+
+}
+
+func percentChange(q1, q2 float64) float64 {
+	diff := q1 - q2
+	delta := (diff / q1) * 100
+	return delta
 }
 
 //Gives the trend before the current Candlestick pattern
@@ -317,7 +366,7 @@ func isBearish(csDetails []OHLC) (bool, int) {
 
 }
 
-func isBullishMarubuzo(csDetails OHLC) bool {
+func isBullishMarubozu(csDetails OHLC) bool {
 	if csDetails.Open < csDetails.Close {
 		if csDetails.Open == csDetails.Low && csDetails.Close == csDetails.High {
 			return true
@@ -333,7 +382,7 @@ func isBullishMarubuzo(csDetails OHLC) bool {
 
 }
 
-func isBearishMarubuzo(ohlc OHLC) bool {
+func isBearishMarubozu(ohlc OHLC) bool {
 
 	if ohlc.Open > ohlc.Close {
 		if ohlc.Open == ohlc.High && ohlc.Close == ohlc.Low {
